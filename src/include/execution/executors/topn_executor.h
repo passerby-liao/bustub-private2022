@@ -13,8 +13,8 @@
 #pragma once
 
 #include <memory>
+#include <stack>
 #include <vector>
-
 #include "execution/executor_context.h"
 #include "execution/executors/abstract_executor.h"
 #include "execution/plans/seq_scan_plan.h"
@@ -52,5 +52,7 @@ class TopNExecutor : public AbstractExecutor {
  private:
   /** The topn plan node to be executed */
   const TopNPlanNode *plan_;
+  std::unique_ptr<AbstractExecutor> child_;
+  std::stack<Tuple> res_tuples_;
 };
 }  // namespace bustub

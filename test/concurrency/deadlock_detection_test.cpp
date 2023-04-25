@@ -21,7 +21,7 @@
       << "Test Failed Due to Time Out";
 
 namespace bustub {
-TEST(LockManagerDeadlockDetectionTest, DISABLED_EdgeTest) {
+TEST(LockManagerDeadlockDetectionTest, EdgeTest) {
   LockManager lock_mgr{};
 
   const int num_nodes = 100;
@@ -50,20 +50,17 @@ TEST(LockManagerDeadlockDetectionTest, DISABLED_EdgeTest) {
     edges.emplace_back(t1, t2);
     EXPECT_EQ((i / 2) + 1, lock_mgr.GetEdgeList().size());
   }
-
   auto lock_mgr_edges = lock_mgr.GetEdgeList();
   EXPECT_EQ(num_edges, lock_mgr_edges.size());
   EXPECT_EQ(num_edges, edges.size());
-
   std::sort(lock_mgr_edges.begin(), lock_mgr_edges.end());
   std::sort(edges.begin(), edges.end());
-
   for (int i = 0; i < num_edges; i++) {
     EXPECT_EQ(edges[i], lock_mgr_edges[i]);
   }
 }
 
-TEST(LockManagerDeadlockDetectionTest, DISABLED_BasicDeadlockDetectionTest) {
+TEST(LockManagerDeadlockDetectionTest, BasicDeadlockDetectionTest) {
   LockManager lock_mgr{};
   TransactionManager txn_mgr{&lock_mgr};
 

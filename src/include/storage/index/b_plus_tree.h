@@ -23,6 +23,7 @@ namespace bustub {
 
 #define BPLUSTREE_TYPE BPlusTree<KeyType, ValueType, KeyComparator>
 
+enum class Operation { SEARCH, INSERT, DELETE };
 /**
  * Main class providing the API for the Interactive B+ Tree.
  *
@@ -48,8 +49,14 @@ class BPlusTree {
   // Insert a key-value pair into this B+ tree.
   auto Insert(const KeyType &key, const ValueType &value, Transaction *transaction = nullptr) -> bool;
 
+  auto InsertOptimistic(const KeyType &key, const ValueType &value, const KeyComparator &comparator,
+                        Transaction *transaction = nullptr) -> int;
+
   // Remove a key and its value from this B+ tree.
   void Remove(const KeyType &key, Transaction *transaction = nullptr);
+
+  auto RemoveOptimistic(const KeyType &key, const KeyComparator &comparator, Transaction *transaction = nullptr)
+      -> bool;
 
   // return the value associated with a given key
   auto GetValue(const KeyType &key, std::vector<ValueType> *result, Transaction *transaction = nullptr) -> bool;
@@ -74,7 +81,45 @@ class BPlusTree {
   // read data from file and remove one by one
   void RemoveFromFile(const std::string &file_name, Transaction *transaction = nullptr);
 
+  // find leaf node and return page
+  auto FindLeaf(const KeyType &key, Operation operation, Transaction *transaction = nullptr, bool leftMost = false,
+                bool rightMost = false) -> Page *;
+
+  auto FindLeafOptimistic(const KeyType &key, Transaction *transaction = nullptr) -> Page *;
+
+  void ReleaseLatchFromQueue(Transaction *transaction);
+
  private:
+  void StartNewTree(const KeyType &key, const ValueType &value);
+
+  auto InsertIntoLeaf(const KeyType &key, const ValueType &value, Transaction *transaction = nullptr) -> bool;
+  void InsertIntoParent(BPlusTreePage *old_node, const KeyType &key, BPlusTreePage *new_node,
+                        Transaction *transaction = nullptr);
+
+  template <typename N>
+  auto Split(N *node) -> N *;
+
+  template <typename N>
+  auto CoalesceOrRedistribute(N *node, Transaction *transaction = nullptr) -> bool;
+
+  template <typename N>
+  auto Coalesce(N *neighbor_node, N *node, BPlusTreeInternalPage<KeyType, page_id_t, KeyComparator> *parent, int index,
+                Transaction *transaction) -> bool;
+
+  template <typename N>
+  void Redistribute(N *neighbor_node, N *node, BPlusTreeInternalPage<KeyType, page_id_t, KeyComparator> *parent,
+                    int index);
+  // template <typename N>
+  // auto Coalesce(N *neighbor_node, N *node, BPlusTreeInternalPage<KeyType, page_id_t, KeyComparator> *parent, int
+  // index,
+  //               Transaction *transaction = nullptr) -> bool;
+
+  // template <typename N>
+  // void Redistribute(N *neighbor_node, N *node, BPlusTreeInternalPage<KeyType, page_id_t, KeyComparator> *parent,
+  //                   int index, bool from_prev);
+
+  auto AdjustRoot(BPlusTreePage *node) -> bool;
+
   void UpdateRootPageId(int insert_record = 0);
 
   /* Debug Routines for FREE!! */
@@ -89,6 +134,8 @@ class BPlusTree {
   KeyComparator comparator_;
   int leaf_max_size_;
   int internal_max_size_;
+
+  ReaderWriterLatch root_page_id_latch_;
 };
 
 }  // namespace bustub

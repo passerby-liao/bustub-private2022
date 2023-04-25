@@ -13,10 +13,24 @@
 
 namespace bustub {
 IndexScanExecutor::IndexScanExecutor(ExecutorContext *exec_ctx, const IndexScanPlanNode *plan)
-    : AbstractExecutor(exec_ctx) {}
+    : AbstractExecutor(exec_ctx),
+      plan_{plan},
+      index_info_{this->exec_ctx_->GetCatalog()->GetIndex(plan_->index_oid_)},
+      table_info_{this->exec_ctx_->GetCatalog()->GetTable(index_info_->table_name_)},
+      tree_{dynamic_cast<BPlusTreeIndexForOneIntegerColumn *>(index_info_->index_.get())},
+      iter_{tree_->GetBeginIterator()} {
+}  // iter_没有默认构造函数  构造函数初始值列表 真正初始化类成员的，构造函数体内只是二次赋值罢了。
 
-void IndexScanExecutor::Init() { throw NotImplementedException("IndexScanExecutor is not implemented"); }
+void IndexScanExecutor::Init() {}
 
-auto IndexScanExecutor::Next(Tuple *tuple, RID *rid) -> bool { return false; }
+auto IndexScanExecutor::Next(Tuple *tuple, RID *rid) -> bool {
+  if (iter_ == tree_->GetEndIterator()) {
+    return false;
+  }
+  *rid = (*iter_).second;
+  bool res = table_info_->table_->GetTuple(*rid, tuple, exec_ctx_->GetTransaction());
+  ++iter_;
+  return res;
+}
 
 }  // namespace bustub

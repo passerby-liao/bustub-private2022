@@ -105,6 +105,7 @@ class ExtendibleHashTable : public HashTable<K, V> {
    */
   auto Remove(const K &key) -> bool override;
 
+  inline void IncrementDepth() { global_depth_++; }
   /**
    * Bucket class for each hash table bucket that the directory points to.
    */
